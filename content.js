@@ -43,10 +43,6 @@ function extractRouteFromURL(url) {
     return { origin: null, destination: null };
   }
 }
-
-
-
-
 // Function to create and display the popup with route information
 function createRoutePopup(routeData, safetyAnalysis) {
   // Remove existing popup
