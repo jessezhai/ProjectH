@@ -1,6 +1,9 @@
 // central score variable
-let routeSafetyScore = 12;
+let routeSafetyScore = 70;
 
+// random image 
+const happyImages = ["happy1.gif", "happy.gif"];
+const sadImages   = [ "sad.gif","mascot.png"];
 
 // Backgrounnd
 // detect it is a walking route
@@ -54,15 +57,22 @@ function createPopup(score) {
   
 }
 
+
+// get random
+function getRandomImage(images) {
+  const index = Math.floor(Math.random() * images.length);
+  return images[index];
+}
+
 // switch mascot image based on score
 function updateMascot(value) {
   const mascot = document.getElementById('mascot-img');
   if (!mascot) return;
 
   if (value > 50) {
-    mascot.src = chrome.runtime.getURL("happy.gif");
+    mascot.src = chrome.runtime.getURL(getRandomImage(happyImages));
   } else {
-    mascot.src = chrome.runtime.getURL("sad.gif");
+    mascot.src = chrome.runtime.getURL(getRandomImage(sadImages));
   }
 }
 

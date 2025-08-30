@@ -5,13 +5,13 @@
   "content_scripts": [
     {
       "matches": ["https://www.google.com/maps/*"],
-      "js": ["content.js"],
+      "js": ["content.js", "background.js"],
       "css": ["bootstrap-5.3.8-dist/css/bootstrap.min.css", "content.css"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["mascot.png","happy.gif","sad.gif"],
+      "resources": ["mascot.png","happy.gif","sad.gif","happy1.gif"],
       "matches": ["<all_urls>"]
     }
   ],
