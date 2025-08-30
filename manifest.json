@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Popups",
+  "name": "Route Safety Analyzer",
   "version": "1.0",
+  "description": "Analyzes walking route safety on Google Maps",
   "content_scripts": [
     {
       "matches": ["https://www.google.com/maps/*"],
@@ -9,5 +10,15 @@
       "css": ["bootstrap-5.3.8-dist/css/bootstrap.min.css", "content.css"]
     }
   ],
-  "permissions": ["activeTab"]
+  "permissions": ["activeTab"],
+  "host_permissions": [
+    "https://maps.googleapis.com/*",
+    "https://www.google.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["mascot.png", "bootstrap-5.3.8-dist/css/bootstrap.min.css"],
+      "matches": ["https://www.google.com/*"]
+    }
+  ]
 }
