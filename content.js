@@ -269,10 +269,12 @@ currentRouteSignature = getRouteSignature(window.location.href);
 if (currentRouteSignature && currentRouteSignature !== '') {
   displayLoadingPopup();
   
+  // current location and destination
   const routeData = extractRouteFromURL(window.location.href);
   
   // Getting route from API
   if (routeData.origin && routeData.destination) {
+    
     computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
       .then(result => console.log('Route computed:', result))
       .catch(error => console.error('Error computing route:', error));
