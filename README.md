@@ -1,3 +1,4 @@
+![Logo](logo1.png)
 # WalkMate
 Credits:
 Jesse Zhai
