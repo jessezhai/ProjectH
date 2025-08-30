@@ -11,7 +11,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["mascot.png"],
+      "resources": ["mascot.png","happy.gif","sad.gif"],
       "matches": ["<all_urls>"]
     }
   ],

@@ -1,18 +1,63 @@
+/* Popup container */
 #popup-ui {
   position: fixed;
-  bottom: 20px;
+  top: 20px;     /* ⬅️ was bottom: 20px */
   right: 20px;
   width: 220px;
   z-index: 9999;
+  font-family: Arial, sans-serif;
 }
 
+/* Card styling */
+#popup-ui .card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.25);
+  padding: 12px;
+  position: relative; /* so the close button positions correctly */
+  text-align: center;
+}
+
+/* Close button */
+#popup-ui .popup-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+#popup-ui .popup-close:hover {
+  color: #000;
+}
+
+/* Mascot image */
 #popup-ui img {
   width: 50px;
   height: 50px;
+  margin: 8px 0;
   animation: bounce 1s infinite alternate;
 }
 
+/* Bounce animation */
 @keyframes bounce {
-  0% { transform: translateY(0); }
+  0%   { transform: translateY(0); }
   100% { transform: translateY(-5px); }
+}
+
+/* Text styling */
+#popup-ui .card-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 6px 0;
+}
+
+#popup-ui .card-text {
+  font-size: 14px;
+  margin: 0;
 }
