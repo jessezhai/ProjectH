@@ -1,24 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "Route Safety Analyzer",
-  "version": "1.0",
+  "name": "WalkMate",
+  "version": "0.1.0",
   "description": "Analyzes walking route safety on Google Maps",
   "content_scripts": [
     {
       "matches": ["https://www.google.com/maps/*"],
       "js": ["content.js"],
-      "css": ["bootstrap-5.3.8-dist/css/bootstrap.min.css", "content.css"]
+      "css": ["bootstrap-5.3.8-dist/css/bootstrap.min.css", "content.css"],
+      "run_at": "document_idle"
     }
   ],
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": [
     "https://maps.googleapis.com/*",
-    "https://www.google.com/*"
+    "https://www.google.com/*",
+    "https://routes.googleapis.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "web_accessible_resources": [
     {
       "resources": ["mascot.png", "bootstrap-5.3.8-dist/css/bootstrap.min.css"],
-      "matches": ["https://www.google.com/*"]
+      "matches": ["https://www.google.com/*","https://maps.googleapis.com/*","https://routes.googleapis.com/*"]
     }
   ]
 }

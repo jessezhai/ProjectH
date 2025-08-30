@@ -1,4 +1,6 @@
 const GOOGLE_MAPS_API_KEY = 'AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM'; 
+console.log("Maps API Key:", GOOGLE_MAPS_API_KEY);
+console.log("Test")
 
 // Function to extract origin and destination from Google Maps URL
 function extractRouteFromURL(url) {
@@ -42,255 +44,8 @@ function extractRouteFromURL(url) {
   }
 }
 
-// Function to extract route data from the Google Maps page DOM
-function extractRouteDataFromPage() {
-  try {
-    console.log('Extracting route data from page DOM...');
-    const routeInfo = {};
-    
-    // More comprehensive selectors for distance and duration
-    const possibleSelectors = [
-      // Common route info selectors
-      '[data-value="Distance"]',
-      '[data-value="Duration"]', 
-      '.section-directions-trip-duration',
-      '.section-directions-trip-numbers',
-      '[data-trip-index="0"]',
-      
-      // Text-based searches for elements containing time/distance
-      '*:contains("min")',
-      '*:contains("km")',
-      '*:contains("mi")',
-      '*:contains("hour")',
-      
-      // Look for route summary sections
-      '.directions-travel-mode-icon',
-      '.section-directions-trip',
-      '.directions-trip',
-      '[role="button"][data-value]',
-      
-      // Newer Google Maps selectors
-      '[data-item-id]',
-      '[jsaction*="route"]',
-      '[aria-label*="minute"]',
-      '[aria-label*="hour"]',
-      '[aria-label*="km"]',
-      '[aria-label*="mile"]'
-    ];
-    
-    // Function to find text containing patterns
-    function findElementsWithPattern(pattern) {
-      const walker = document.createTreeWalker(
-        document.body,
-        NodeFilter.SHOW_TEXT,
-        null,
-        false
-      );
-      
-      const elements = [];
-      let node;
-      while (node = walker.nextNode()) {
-        if (pattern.test(node.textContent)) {
-          elements.push(node.parentElement);
-        }
-      }
-      return elements;
-    }
-    
-    // Extract distance - look for patterns like "2.3 km", "1.5 mi", etc.
-    let distanceFound = false;
-    const distancePattern = /(\d+(?:\.\d+)?)\s*(km|mi|mile|meter|m)(?!\w)/i;
-    
-    // Try specific selectors first
-    for (const selector of possibleSelectors) {
-      if (distanceFound) break;
-      try {
-        const elements = document.querySelectorAll(selector);
-        for (const element of elements) {
-          const text = element.textContent.trim();
-          const match = text.match(distancePattern);
-          if (match) {
-            routeInfo.distance = {
-              text: match[0],
-              value: parseFloat(match[1]) * (match[2].toLowerCase().startsWith('k') ? 1000 : 1)
-            };
-            console.log('Found distance:', routeInfo.distance);
-            distanceFound = true;
-            break;
-          }
-        }
-      } catch (e) { /* Ignore invalid selectors */ }
-    }
-    
-    // If not found, search through all text nodes
-    if (!distanceFound) {
-      const distanceElements = findElementsWithPattern(distancePattern);
-      for (const element of distanceElements) {
-        const text = element.textContent.trim();
-        const match = text.match(distancePattern);
-        if (match) {
-          routeInfo.distance = {
-            text: match[0],
-            value: parseFloat(match[1]) * (match[2].toLowerCase().startsWith('k') ? 1000 : 1)
-          };
-          console.log('Found distance in text:', routeInfo.distance);
-          break;
-        }
-      }
-    }
-    
-    // Extract duration - look for patterns like "25 min", "1 hr 30 min", etc.
-    let durationFound = false;
-    const durationPattern = /(?:(\d+)\s*(?:hr|hour)s?)?\s*(\d+)\s*(?:min|minute)s?/i;
-    const simpleDurationPattern = /(\d+)\s*(?:min|minute|hr|hour)s?/i;
-    
-    // Try specific selectors first
-    for (const selector of possibleSelectors) {
-      if (durationFound) break;
-      try {
-        const elements = document.querySelectorAll(selector);
-        for (const element of elements) {
-          const text = element.textContent.trim();
-          const match = text.match(durationPattern) || text.match(simpleDurationPattern);
-          if (match) {
-            let totalMinutes = 0;
-            if (match.length === 3 && match[1]) { // Has hours
-              totalMinutes = parseInt(match[1]) * 60 + parseInt(match[2]);
-            } else { // Just minutes or just hours
-              const value = parseInt(match[1] || match[2]);
-              totalMinutes = text.toLowerCase().includes('hr') || text.toLowerCase().includes('hour') ? value * 60 : value;
-            }
-            
-            routeInfo.duration = {
-              text: match[0],
-              value: totalMinutes * 60 // in seconds
-            };
-            console.log('Found duration:', routeInfo.duration);
-            durationFound = true;
-            break;
-          }
-        }
-      } catch (e) { /* Ignore invalid selectors */ }
-    }
-    
-    // If not found, search through all text nodes
-    if (!durationFound) {
-      const durationElements = findElementsWithPattern(durationPattern);
-      for (const element of durationElements) {
-        const text = element.textContent.trim();
-        const match = text.match(durationPattern) || text.match(simpleDurationPattern);
-        if (match) {
-          let totalMinutes = 0;
-          if (match.length === 3 && match[1]) { // Has hours
-            totalMinutes = parseInt(match[1]) * 60 + parseInt(match[2]);
-          } else { // Just minutes or just hours
-            const value = parseInt(match[1] || match[2]);
-            totalMinutes = text.toLowerCase().includes('hr') || text.toLowerCase().includes('hour') ? value * 60 : value;
-          }
-          
-          routeInfo.duration = {
-            text: match[0],
-            value: totalMinutes * 60 // in seconds
-          };
-          console.log('Found duration in text:', routeInfo.duration);
-          break;
-        }
-      }
-    }
-    
-    // Try to extract step-by-step directions
-    const stepSelectors = [
-      '.section-directions-step',
-      '[data-step-index]',
-      '.directions-step',
-      '[role="button"][aria-label*="Continue"]',
-      '[role="button"][aria-label*="Turn"]',
-      '.section-directions-step-content'
-    ];
-    
-    const steps = [];
-    for (const selector of stepSelectors) {
-      try {
-        const stepsElements = document.querySelectorAll(selector);
-        stepsElements.forEach((stepElement, index) => {
-          const instruction = stepElement.textContent.trim();
-          if (instruction && instruction.length > 10) { // Filter out very short text
-            steps.push({
-              html_instructions: instruction,
-              distance: { text: 'N/A' },
-              step_index: index
-            });
-          }
-        });
-        if (steps.length > 0) break;
-      } catch (e) { /* Ignore invalid selectors */ }
-    }
-    
-    // Get addresses from URL or page
-    const { origin, destination } = extractRouteFromURL(window.location.href);
-    
-    // Construct a simplified route data structure
-    const routeData = {
-      routes: [{
-        legs: [{
-          start_address: origin || 'Starting location',
-          end_address: destination || 'Destination',
-          distance: routeInfo.distance || { text: 'Unknown', value: 0 },
-          duration: routeInfo.duration || { text: 'Unknown', value: 0 },
-          steps: steps.length > 0 ? steps : [{ html_instructions: 'Route details not available', distance: { text: 'N/A' } }]
-        }]
-      }]
-    };
-    
-    console.log('Extracted route data:', routeData);
-    return routeData;
-  } catch (error) {
-    console.error('Error extracting route data from page:', error);
-    return null;
-  }
-}
 
-// Function to analyze route safety (placeholder for now)
-function analyzeRouteSafety(routeData) {
-  if (!routeData || !routeData.routes || routeData.routes.length === 0) {
-    return { score: 0, factors: ['No route data available'] };
-  }
-  
-  const route = routeData.routes[0];
-  const factors = [];
-  let score = 80; // Base score
-  
-  // Example safety factors (you can expand this)
-  const duration = route.legs[0].duration.value; // in seconds
-  const distance = route.legs[0].distance.value; // in meters
-  
-  // Longer walks might be less safe at night
-  if (duration > 1800) { // 30 minutes
-    score -= 10;
-    factors.push('Long walking duration');
-  }
-  
-  // Check for highways or major roads in route steps
-  const steps = route.legs[0].steps;
-  const hasHighways = steps.some(step => 
-    step.html_instructions.toLowerCase().includes('highway') ||
-    step.html_instructions.toLowerCase().includes('freeway')
-  );
-  
-  if (hasHighways) {
-    score -= 15;
-    factors.push('Route includes major roads');
-  }
-  
-  // Check time of day
-  const currentHour = new Date().getHours();
-  if (currentHour < 6 || currentHour > 22) {
-    score -= 20;
-    factors.push('Late night/early morning hours');
-  }
-  
-  return { score: Math.max(0, Math.min(100, score)), factors };
-}
+
 
 // Function to create and display the popup with route information
 function createRoutePopup(routeData, safetyAnalysis) {
@@ -425,11 +180,9 @@ function createBasicPopup(safetyAnalysis) {
 }
 
 // Function to handle route analysis
-async function analyzeCurrentRoute() {
+async function displayLoadingPopup() {
   return new Promise(async (resolve) => {
     try {
-      console.log('Analyzing current route...');
-      
       // Show loading state
       const existingPopup = document.getElementById('mapify-popup');
       if (existingPopup) {
@@ -451,20 +204,6 @@ async function analyzeCurrentRoute() {
       `;
       document.body.appendChild(loadingPopup);
       
-      // Wait a moment for the page to fully load route information
-      setTimeout(() => {
-        // Extract route data from the page DOM
-        const routeData = extractRouteDataFromPage();
-        if (routeData && routeData.routes && routeData.routes.length > 0) {
-          const safetyAnalysis = analyzeRouteSafety(routeData);
-          createRoutePopup(routeData, safetyAnalysis);
-        } else {
-          // Show a basic popup with safety info even if we can't extract full route data
-          const basicSafetyAnalysis = analyzeBasicSafety();
-          createBasicPopup(basicSafetyAnalysis);
-        }
-        resolve();
-      }, 1500); // Give page time to load
       
     } catch (error) {
       console.error('Error in analyzeCurrentRoute:', error);
@@ -478,10 +217,72 @@ let currentRouteSignature = '';
 let isProcessingUrlChange = false;
 let debounceTimer = null;
 
+
+// Minimal: takes { origin: "lat,lng", destination: "addr+with+pluses" }
+async function computeWalkingRouteFromUrlObj(params, apiKey, { signal } = {}) {
+  if (!params) throw new Error("Missing params");
+  const [latStr, lngStr] = String(params.origin || "").split(",");
+  const lat = Number(latStr), lng = Number(lngStr);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error("Bad origin 'lat,lng'");
+
+  // Convert "Sydney+Opera+House,+..." to human text, then decode %xx if any.
+  const destination = decodeURIComponent(String(params.destination || "").replace(/\+/g, " ").trim());
+  if (!destination) throw new Error("Bad destination");
+
+  const body = {
+    origin: { location: { latLng: { latitude: lat, longitude: lng } } },
+    destination: { address: destination },
+    travelMode: "WALK",
+    units: "METRIC"
+  };
+
+  const resp = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": [
+        "routes.distanceMeters",
+        "routes.duration",
+        "routes.polyline.encodedPolyline",
+        "routes.legs.steps.polyline.encodedPolyline",
+        "routes.legs.steps.navigationInstruction"
+      ].join(",")
+    },
+    body: JSON.stringify(body),
+    signal
+  });
+
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} ${await resp.text()}`);
+  const data = await resp.json();
+  const r = data?.routes?.[0];
+
+  return {
+    distanceMeters: r?.distanceMeters ?? null,
+    duration: r?.duration ?? null,
+    routePolyline: r?.polyline?.encodedPolyline ?? null,
+    steps: (r?.legs?.[0]?.steps ?? []).map(s => ({
+      polyline: s.polyline?.encodedPolyline ?? null,
+      instruction: s.navigationInstruction?.instructions ?? ""
+    }))
+  };
+}
+
 // Main execution - initialize route signature and show popup when in walking mode
 currentRouteSignature = getRouteSignature(window.location.href);
 if (currentRouteSignature && currentRouteSignature !== '') {
-  analyzeCurrentRoute();
+  displayLoadingPopup();
+  
+  const routeData = extractRouteFromURL(window.location.href);
+  
+  // Getting route from API
+  if (routeData.origin && routeData.destination) {
+    computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
+      .then(result => console.log('Route computed:', result))
+      .catch(error => console.error('Error computing route:', error));
+  }
+
+
 }
 
 // Function to extract meaningful route signature from URL
@@ -572,3 +373,20 @@ history.replaceState = function() {
   originalReplaceState.apply(history, arguments);
   checkForMeaningfulRouteChanges();
 };
+
+
+// Call this from your UI when you’re ready to fetch the route
+async function getWalkingRoute(originLat, originLng, destinationAddress) {
+  const msg = {
+    type: "computeRoute",
+    payload: {
+      origin: { lat: originLat, lng: originLng },
+      destination: destinationAddress
+    }
+  };
+
+  const res = await chrome.runtime.sendMessage(msg);
+  if (!res?.ok) throw new Error(res?.error || "Unknown error");
+  return res.data; // { distanceMeters, duration, routePolyline, steps[] }
+}
+
