@@ -1,5 +1,4 @@
-// Configuration - You'll need to replace this with your actual API key
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM'; // Replace with your actual API key
+const GOOGLE_MAPS_API_KEY = 'AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM'; 
 
 // Function to extract origin and destination from Google Maps URL
 function extractRouteFromURL(url) {
@@ -23,7 +22,7 @@ function extractRouteFromURL(url) {
       // Look for data parameter which contains route info
       const dataParam = urlParams.get('data');
       if (dataParam) {
-        // This is a complex parameter, try to extract coordinates
+        // Complex parameter: try to extract coordinates
         const coords = dataParam.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/g);
         if (coords && coords.length >= 2) {
           const firstCoord = coords[0].match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
@@ -251,7 +250,7 @@ function extractRouteDataFromPage() {
   }
 }
 
-// Function to analyze route safety (placeholder - you can implement your own logic)
+// Function to analyze route safety (placeholder for now)
 function analyzeRouteSafety(routeData) {
   if (!routeData || !routeData.routes || routeData.routes.length === 0) {
     return { score: 0, factors: ['No route data available'] };
