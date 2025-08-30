@@ -305,37 +305,54 @@ function getRouteSignature(url) {
   return 'walking-route'; // Generic walking route signature
 }
 
-// Debounced function to check for meaningful route changes
 function checkForMeaningfulRouteChanges() {
   // Clear existing debounce timer
   if (debounceTimer) {
     clearTimeout(debounceTimer);
   }
-  
+
   // Debounce the check to avoid rapid fire updates
   debounceTimer = setTimeout(() => {
     const newUrl = window.location.href;
     const newRouteSignature = getRouteSignature(newUrl);
-    
+
     // Only process if the route signature actually changed
     if (newRouteSignature !== currentRouteSignature && !isProcessingUrlChange) {
       console.log('Route signature changed:', currentRouteSignature, '->', newRouteSignature);
       isProcessingUrlChange = true;
       currentRouteSignature = newRouteSignature;
-      
+
       // Remove existing popup only if switching between different route types
       const existingPopup = document.getElementById('mapify-popup');
       if (existingPopup && (currentRouteSignature === '' || newRouteSignature === '')) {
         existingPopup.remove();
       }
-      
+
       // Analyze route if URL contains !3e2 (walking mode)
       if (newRouteSignature && newRouteSignature !== '') {
-        // setTimeout(() => {
-        //   analyzeCurrentRoute().finally(() => {
-        //     isProcessingUrlChange = false;
-        //   });
-        // }, 1500); // Increased delay to ensure page is fully loaded
+        setTimeout(() => {
+          const routeData = extractRouteFromURL(newUrl);
+          if (routeData.origin && routeData.destination) {
+            computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
+              .then(async (result) => {
+                console.log('Route computed:', result);
+                const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ";
+                const aiAnalysis = await analyzeRouteWithAI(result, userApiKey);
+                console.log(aiAnalysis);
+
+                const scoreElement = document.getElementById("score");
+                if (scoreElement) {
+                  scoreElement.insertAdjacentHTML("afterend", `<p>${aiAnalysis}</p>`);
+                }
+              })
+              .catch(error => console.error('Error computing route:', error))
+              .finally(() => {
+                isProcessingUrlChange = false;
+              });
+          } else {
+            isProcessingUrlChange = false;
+          }
+        }, 1500); // delay to ensure Maps has fully updated
       } else {
         // Remove popup if no longer in walking mode
         if (existingPopup) {
@@ -346,6 +363,8 @@ function checkForMeaningfulRouteChanges() {
     }
   }, 500); // 500ms debounce delay
 }
+
+
 
 // Use multiple methods to detect URL changes, but with debouncing
 setInterval(checkForMeaningfulRouteChanges, 2000); // Poll every 2 seconds (less frequent)
