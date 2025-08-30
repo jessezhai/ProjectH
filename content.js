@@ -1,33 +1,74 @@
-let routeSafetyScore = 70;
+let routeSafetyScore = 100;
 const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif', 'happy4.gif'];
-const sadImages = ['sad1.gif', 'sad2.gif'];
+const sadImages   = ['sad1.gif', 'sad2.gif'];
 
 let currentRouteSignature = '';
 let isProcessingUrlChange = false;
 let debounceTimer = null;
 
-// ---- UI: popup + mascot ----
-function createPopup(score) {
-  const popup = document.createElement('div');
-  popup.id = 'popup-ui';
+// ---- Popup Helpers ----
+function showLoading() {
+  let popup = document.getElementById("popup-ui");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "popup-ui";
+    document.body.appendChild(popup);
+  }
+
+  popup.innerHTML = `
+    <div class="card text-center shadow">
+      <button type="button" class="popup-close" aria-label="Close">✖</button>
+      <div id="popup-content">
+        <div id="loading-spinner"></div>
+        <p>Analyzing route...</p>
+      </div>
+    </div>
+  `;
+
+  popup.querySelector(".popup-close").addEventListener("click", closebtn);
+}
+
+function showResult(score, justification) {
+  let popup = document.getElementById("popup-ui");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "popup-ui";
+    document.body.appendChild(popup);
+  }
+
   popup.innerHTML = `
     <div class="card text-center shadow">
       <button type="button" class="popup-close" aria-label="Close">✖</button>
       <img id="mascot-img" class="card-img-top" alt="Mascot">
+      <p id="justification" class="justification">${justification}</p>
     </div>
   `;
-  document.body.appendChild(popup);
-  popup.querySelector('.popup-close').addEventListener('click', closebtn);
+
+  popup.querySelector(".popup-close").addEventListener("click", closebtn);
+
   updateMascot(score);
 }
 
+function removePopup() {
+  const existing = document.getElementById("popup-ui");
+  if (existing) existing.remove();
+}
+
+function closebtn() {
+  removePopup();
+}
+
+// ---- Mascot helpers ----
 function updateMascot(value) {
-  const mascot = document.getElementById('mascot-img');
+  const mascot = document.getElementById("mascot-img");
   if (!mascot) return;
+
   const newGif = value > 50
     ? chrome.runtime.getURL(getRandomImage(happyImages))
     : chrome.runtime.getURL(getRandomImage(sadImages));
+
   mascot.src = newGif;
+
   loopMascotGif(mascot, 1000);
 }
 
@@ -41,36 +82,6 @@ function loopMascotGif(imgElement, delay = 500) {
     imgElement.src = '';
     setTimeout(() => { imgElement.src = src; }, 50);
   }, delay);
-}
-
-function removePopup() {
-  const existing = document.getElementById('popup-ui');
-  if (existing) existing.remove();
-}
-
-function closebtn() {
-  removePopup();
-}
-
-function showLoading() {
-  const mascotImg = document.getElementById("mascot-img");
-  if (!mascotImg) return;
-  if (!document.getElementById("loading-spinner")) {
-    const spinner = document.createElement("div");
-    spinner.id = "loading-spinner";
-    mascotImg.insertAdjacentElement("afterend", spinner);
-  }
-  if (!document.getElementById("spinner-style")) {
-    const style = document.createElement("style");
-    style.id = "spinner-style";
-
-    document.head.appendChild(style);
-  }
-}
-
-function hideLoading() {
-  const spinner = document.getElementById("loading-spinner");
-  if (spinner) spinner.remove();
 }
 
 // ---- Route extraction from URL ----
@@ -114,36 +125,28 @@ function checkForMeaningfulRouteChanges() {
   debounceTimer = setTimeout(() => {
     const newUrl = window.location.href;
     const newSig = getRouteSignature(newUrl);
+
     if (newSig !== currentRouteSignature && !isProcessingUrlChange) {
       isProcessingUrlChange = true;
       currentRouteSignature = newSig;
 
       if (newSig) {
         const routeData = extractRouteFromURL(newUrl);
+
         if (routeData.origin && routeData.destination) {
+          // Show loading popup first
           showLoading();
+
+          // Ask background script to compute route
           chrome.runtime.sendMessage(
             { type: "computeRoute", origin: routeData.origin, destination: routeData.destination },
             (res) => {
-              hideLoading();
               isProcessingUrlChange = false;
               if (!res?.ok) return console.error("Route error:", res?.error);
+
               routeSafetyScore = res.score;
-              if (!document.getElementById("popup-ui")) {
-                createPopup(routeSafetyScore);
-              } else {
-                updateMascot(routeSafetyScore);
-              }
-              const mascotImg = document.getElementById("mascot-img");
-              if (mascotImg) {
-                let existingJust = mascotImg.nextElementSibling;
-                if (existingJust && existingJust.classList.contains("justification")) {
-                  existingJust.textContent = res.justification;
-                } else {
-                  mascotImg.insertAdjacentHTML("afterend",
-                    `<p class="justification">${res.justification}</p>`);
-                }
-              }
+              console.log("Route safety score:", routeSafetyScore);
+              showResult(res.score, res.justification); // Replace spinner with mascot + justification
             }
           );
         } else {
