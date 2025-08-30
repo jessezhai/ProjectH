@@ -2,7 +2,7 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM';
 
 
 let routeSafetyScore = 70;
-const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif'];
+const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif', 'happy4.gif'];
 const neutralImages = ['neutral1.gif']
 const sadImages = ['sad1.gif', 'sad2.gif'];
 
