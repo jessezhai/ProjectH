@@ -22,7 +22,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["mascot.png", "bootstrap-5.3.8-dist/css/bootstrap.min.css"],
+      "resources": ["mascot.png", "bootstrap-5.3.8-dist/css/bootstrap.min.css",
+      "happy1.gif",
+      "happy2.gif",
+      "happy3.gif",
+      "happy4.gif",
+      "neutral1.gif",
+      "sad1.gif",
+      "sad2.gif"],
       "matches": ["https://www.google.com/*","https://maps.googleapis.com/*","https://routes.googleapis.com/*"]
     }
   ]

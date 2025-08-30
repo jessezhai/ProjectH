@@ -74,13 +74,10 @@ function createPopup(score) {
   
   popup.innerHTML = `
   <div class="card text-center shadow">
-  <button type="button" class="popup-close" aria-label="Close">✖</button>
+    <button type="button" class="popup-close" aria-label="Close">✖</button>
   <img id="mascot-img" class="card-img-top" alt="Mascot">
-  <div class="card-body">
-        <h5 class="card-title">Mascot says:</h5>
-        <p class="card-text">Route safety: <span id="score">${score}%</span></p>
-      </div>
-    </div>
+
+  </div>
   `;
   // console.log(score);
   document.body.appendChild(popup);
@@ -89,7 +86,7 @@ function createPopup(score) {
   popup.querySelector('.popup-close').addEventListener('click', closebtn);
   
   updateMascot(score);
-  
+
 }
 
 
@@ -104,11 +101,28 @@ function updateMascot(value) {
   const mascot = document.getElementById('mascot-img');
   if (!mascot) return;
 
-  if (value > 50) {
-    mascot.src = chrome.runtime.getURL(getRandomImage(happyImages));
-  } else {
-    mascot.src = chrome.runtime.getURL(getRandomImage(sadImages));
-  }
+  const newGif = value > 50
+    ? chrome.runtime.getURL(getRandomImage(happyImages))
+    : chrome.runtime.getURL(getRandomImage(sadImages));
+
+  mascot.src = newGif;
+
+  // Start looping
+  loopMascotGif(mascot, 1000); // 1s delay between loops
+}
+
+
+function loopMascotGif(imgElement, delay = 500) {
+  if (!imgElement) return;
+  const src = imgElement.src;
+
+  // Remove and re-set the src after a delay to "replay" the GIF
+  setTimeout(() => {
+    imgElement.src = '';
+    setTimeout(() => {
+      imgElement.src = src;
+    }, 50); // tiny pause to force reload
+  }, delay);
 }
 
 // remove existing popup
@@ -266,17 +280,20 @@ if (currentRouteSignature && currentRouteSignature !== '') {
       .then(async (result) => {
         console.log('Route computed:', result);
         const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ"
-        const aiAnalysis = await analyzeRouteWithAI(result, userApiKey);
-        console.log(aiAnalysis);
-        const scoreElement = document.getElementById("score");
-        if (scoreElement) {
-          scoreElement.insertAdjacentHTML("afterend", `<p>${aiAnalysis}</p>`);
+        const { score, justification } = await analyzeRouteWithAI(result, userApiKey);
+        routeSafetyScore = score;
+        if (!document.getElementById("popup-ui")) {
+          createPopup(score);
+        } else {
+          updateMascot(score);
+        }
+        const mascotImg = document.getElementById("mascot-img");
+        if (mascotImg) {
+          mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification}</p>`);
         }
       })
       .catch(error => console.error('Error computing route:', error));
   }
-
-
 }
 
 // Function to extract meaningful route signature from URL
@@ -337,12 +354,16 @@ function checkForMeaningfulRouteChanges() {
               .then(async (result) => {
                 console.log('Route computed:', result);
                 const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ";
-                const aiAnalysis = await analyzeRouteWithAI(result, userApiKey);
-                console.log(aiAnalysis);
-
-                const scoreElement = document.getElementById("score");
-                if (scoreElement) {
-                  scoreElement.insertAdjacentHTML("afterend", `<p>${aiAnalysis}</p>`);
+                const { score, justification } = await analyzeRouteWithAI(result, userApiKey);
+                routeSafetyScore = score;
+                if (!document.getElementById("popup-ui")) {
+                  createPopup(score);
+                } else {
+                  updateMascot(score);
+                }
+                const mascotImg = document.getElementById("mascot-img");
+                if (mascotImg) {
+                  mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification}</p>`);
                 }
               })
               .catch(error => console.error('Error computing route:', error))
@@ -433,5 +454,28 @@ ${routeResult.steps.map((s, i) => `${i+1}. ${s.instruction}`).join("\n")}
   }
 
   const data = await resp.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "No analysis returned.";
+  let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  console.log(textResponse);
+  if (textResponse.startsWith('"') && textResponse.endsWith('"')) {
+    textResponse = textResponse.slice(1, -1).replace(/\\"/g, '"');
+  }
+  textResponse = textResponse.trim().replace(/^```(?:json)?\s*/, '').replace(/```$/, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(textResponse);
+  } catch {
+    console.error("Failed to parse AI response:", textResponse);
+    return { score: 50, justification: "Unclear result" };
+  }
+
+  // Compute single metric (average of 3)
+  const safety = Number(parsed.safety_rating) || 0;
+  const accessibility = Number(parsed.accessibility_rating) || 0;
+  const comfort = Number(parsed.comfort_rating) || 0;
+
+  const score = Math.round((safety + accessibility + comfort) / 3);
+  const justification = parsed.justification ? `"${parsed.justification}"` : "\"No justification\"";
+
+  return { score, justification };
 }
