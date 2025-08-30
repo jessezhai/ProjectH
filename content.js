@@ -59,7 +59,6 @@ function closebtn() {
   removePopup();
 }
 
-// ---- Mascot helpers ----
 function updateMascot(value) {
   const mascot = document.getElementById("mascot-img");
   if (!mascot) return;
@@ -116,7 +115,6 @@ function extractRouteFromURL(url) {
     }
   }
 
-  // Handle "Your Location"
   return new Promise((resolve) => {
     if (origin?.toLowerCase().includes("your location")) {
       navigator.geolocation.getCurrentPosition(
@@ -146,7 +144,6 @@ function extractRouteFromURL(url) {
   });
 }
 
-
 function getRouteSignature(url) {
   if (!url.includes('!3e2')) return '';
   const match = url.match(/\/dir\/([^\/]+)\/([^\/\?]+)/);
@@ -154,7 +151,6 @@ function getRouteSignature(url) {
   return 'walking-route';
 }
 
-// ---- Debounced watcher ----
 async function checkForMeaningfulRouteChanges() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
@@ -169,10 +165,8 @@ async function checkForMeaningfulRouteChanges() {
         const routeData = await extractRouteFromURL(newUrl);
 
         if (routeData.origin && routeData.destination) {
-          // Show loading popup first
           showLoading();
 
-          // Ask background script to compute route
           chrome.runtime.sendMessage(
             { type: "computeRoute", origin: routeData.origin, destination: routeData.destination },
             (res) => {
@@ -195,7 +189,6 @@ async function checkForMeaningfulRouteChanges() {
   }, 500);
 }
 
-// ---- Watch URL changes ----
 setInterval(checkForMeaningfulRouteChanges, 2000);
 window.addEventListener('popstate', checkForMeaningfulRouteChanges);
 
@@ -210,5 +203,4 @@ history.replaceState = function() {
   checkForMeaningfulRouteChanges();
 };
 
-// Run on load
 checkForMeaningfulRouteChanges();
