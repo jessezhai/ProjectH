@@ -84,7 +84,6 @@ function loopMascotGif(imgElement, delay = 500) {
   }, delay);
 }
 
-// ---- Route extraction from URL ----
 function extractRouteFromURL(url) {
   const urlParams = new URLSearchParams(url.split('?')[1] || '');
   let origin = null, destination = null;
@@ -109,8 +108,37 @@ function extractRouteFromURL(url) {
       }
     }
   }
-  return { origin, destination };
+
+  // Handle "Your Location"
+  return new Promise((resolve) => {
+    if (origin?.toLowerCase().includes("your location")) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          origin = `${pos.coords.latitude},${pos.coords.longitude}`;
+          resolve({ origin, destination });
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+          resolve({ origin: null, destination });
+        }
+      );
+    } else if (destination?.toLowerCase().includes("your location")) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          destination = `${pos.coords.latitude},${pos.coords.longitude}`;
+          resolve({ origin, destination });
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+          resolve({ origin, destination: null });
+        }
+      );
+    } else {
+      resolve({ origin, destination });
+    }
+  });
 }
+
 
 function getRouteSignature(url) {
   if (!url.includes('!3e2')) return '';
@@ -120,9 +148,9 @@ function getRouteSignature(url) {
 }
 
 // ---- Debounced watcher ----
-function checkForMeaningfulRouteChanges() {
+async function checkForMeaningfulRouteChanges() {
   if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
+  debounceTimer = setTimeout(async () => {
     const newUrl = window.location.href;
     const newSig = getRouteSignature(newUrl);
 
@@ -131,7 +159,7 @@ function checkForMeaningfulRouteChanges() {
       currentRouteSignature = newSig;
 
       if (newSig) {
-        const routeData = extractRouteFromURL(newUrl);
+        const routeData = await extractRouteFromURL(newUrl);
 
         if (routeData.origin && routeData.destination) {
           // Show loading popup first
