@@ -1,5 +1,6 @@
 const GOOGLE_MAPS_API_KEY = 'AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM'; 
 
+
 let routeSafetyScore = 70;
 const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif'];
 const neutralImages = ['neutral1.gif']
@@ -163,170 +164,6 @@ function extractRouteFromURL(url) {
     return { origin: null, destination: null };
   }
 }
-// Function to create and display the popup with route information
-// function createRoutePopup(routeData, safetyAnalysis) {
-//   // Remove existing popup
-//   const existingPopup = document.getElementById('mapify-popup');
-//   if (existingPopup) {
-//     existingPopup.remove();
-//   }
-  
-//   if (!routeData) {
-//     return;
-//   }
-  
-//   const route = routeData.routes[0];
-//   const leg = route.legs[0];
-//   const alternativeCount = routeData.routes.length - 1;
-  
-//   const popup = document.createElement('div');
-//   popup.id = 'mapify-popup';
-//   popup.innerHTML = `
-//     <div class="card">
-//       <div class="card-header d-flex justify-content-between align-items-center">
-//         <h6 class="mb-0">Route Safety Analysis</h6>
-//         <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('mapify-popup').remove()"></button>
-//       </div>
-//       <div class="card-body">
-//         <div class="text-center mb-3">
-//           <img src="${chrome.runtime.getURL('mascot.png')}" class="mascot-img" alt="Mascot">
-//           <h5 class="card-title mt-2">Safety Score: ${safetyAnalysis.score}%</h5>
-//         </div>
-        
-//         <div class="route-info mb-3">
-//           <h6>Route Summary:</h6>
-//           <ul class="list-unstyled small">
-//             <li><strong>Steps:</strong> ${leg.steps.length} navigation steps</li>
-//             ${alternativeCount > 0 ? `<li><strong>Alternatives:</strong> ${alternativeCount} other routes</li>` : ''}
-//           </ul>
-//         </div>
-        
-//         ${safetyAnalysis.factors.length > 0 ? `
-//         <div class="safety-factors">
-//           <h6>Safety Considerations:</h6>
-//           <ul class="list-unstyled small">
-//             ${safetyAnalysis.factors.map(factor => `<li>• ${factor}</li>`).join('')}
-//           </ul>
-//         </div>
-//         ` : ''}
-        
-//         <div class="mt-3">
-//           <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('route-steps').style.display = document.getElementById('route-steps').style.display === 'none' ? 'block' : 'none'">
-//             Toggle Steps
-//           </button>
-//         </div>
-        
-//         <div id="route-steps" style="display: none;" class="mt-2">
-//           <h6>Step-by-step:</h6>
-//           <ol class="small">
-//             ${leg.steps.map(step => `
-//               <li>${step.html_instructions.replace(/<[^>]*>/g, '')} (${step.distance.text})</li>
-//             `).join('')}
-//           </ol>
-//         </div>
-//       </div>
-//     </div>
-//   `;
-  
-//   document.body.appendChild(popup);
-// }
-
-// Function to analyze basic safety without detailed route data
-// function analyzeBasicSafety() {
-//   const factors = [];
-//   let score = 75; // Base score for walking routes
-  
-//   // Check time of day
-//   const currentHour = new Date().getHours();
-//   if (currentHour < 6 || currentHour > 22) {
-//     score -= 20;
-//     factors.push('Late night/early morning hours');
-//   }
-  
-//   // Check day of week
-//   const dayOfWeek = new Date().getDay();
-//   if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
-//     factors.push('Weekend - different traffic patterns');
-//   }
-  
-//   // Basic safety tip
-//   factors.push('Stay aware of your surroundings');
-//   factors.push('Consider well-lit routes when possible');
-  
-//   return { score: Math.max(0, Math.min(100, score)), factors };
-// }
-
-// Function to create a basic popup when detailed route data isn't available
-// function createBasicPopup(safetyAnalysis) {
-//   // Remove existing popup
-//   const existingPopup = document.getElementById('mapify-popup');
-//   if (existingPopup) {
-//     existingPopup.remove();
-//   }
-  
-//   const popup = document.createElement('div');
-//   popup.id = 'mapify-popup';
-//   popup.innerHTML = `
-//     <div class="card">
-//       <div class="card-header d-flex justify-content-between align-items-center">
-//         <h6 class="mb-0">Walking Safety Tips</h6>
-//         <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('mapify-popup').remove()"></button>
-//       </div>
-//       <div class="card-body">
-//         <div class="text-center mb-3">
-//           <img src="${chrome.runtime.getURL('mascot.png')}" class="mascot-img" alt="Mascot">
-//           <h5 class="card-title mt-2">Safety Score: ${safetyAnalysis.score}%</h5>
-//         </div>
-        
-//         <div class="safety-factors">
-//           <h6>Safety Considerations:</h6>
-//           <ul class="list-unstyled small">
-//             ${safetyAnalysis.factors.map(factor => `<li>• ${factor}</li>`).join('')}
-//           </ul>
-//         </div>
-        
-//         <div class="mt-3 text-center">
-//           <small class="text-muted">Route details will appear when available</small>
-//         </div>
-//       </div>
-//     </div>
-//   `;
-  
-//   document.body.appendChild(popup);
-// }
-
-// Function to handle route analysis
-// async function displayLoadingPopup() {
-//   return new Promise(async (resolve) => {
-//     try {
-//       // Show loading state
-//       const existingPopup = document.getElementById('mapify-popup');
-//       if (existingPopup) {
-//         existingPopup.remove();
-//       }
-      
-//       const loadingPopup = document.createElement('div');
-//       loadingPopup.id = 'mapify-popup';
-//       loadingPopup.innerHTML = `
-//         <div class="card text-center">
-//           <div class="card-body">
-//             <img src="${chrome.runtime.getURL('mascot.png')}" class="mascot-img" alt="Mascot">
-//             <h5 class="card-title mt-2">Analyzing Route...</h5>
-//             <div class="spinner-border spinner-border-sm" role="status">
-//               <span class="visually-hidden">Loading...</span>
-//             </div>
-//           </div>
-//         </div>
-//       `;
-//       document.body.appendChild(loadingPopup);
-      
-      
-//     } catch (error) {
-//       console.error('Error in analyzeCurrentRoute:', error);
-//       resolve();
-//     }
-//   });
-// }
 
 // Watch for meaningful URL changes (since Google Maps is a SPA)
 let currentRouteSignature = '';
@@ -426,8 +263,16 @@ if (currentRouteSignature && currentRouteSignature !== '') {
   if (routeData.origin && routeData.destination) {
     
     computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
-      .then(result => console.log('Route computed:', result))
-      //CALL FUNCTION, USE RESULTS TO GENERATE PROMPT FOR AI ANALYSIS
+      .then(async (result) => {
+        console.log('Route computed:', result);
+        const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ"
+        const aiAnalysis = await analyzeRouteWithAI(result, userApiKey);
+        console.log(aiAnalysis);
+        const scoreElement = document.getElementById("score");
+        if (scoreElement) {
+          scoreElement.insertAdjacentHTML("afterend", `<p>${aiAnalysis}</p>`);
+        }
+      })
       .catch(error => console.error('Error computing route:', error));
   }
 
@@ -538,3 +383,36 @@ async function getWalkingRoute(originLat, originLng, destinationAddress) {
   return res.data; // { distanceMeters, duration, routePolyline, steps[] }
 }
 
+async function analyzeRouteWithAI(routeResult, userApiKey) {
+  const prompt = `
+You are a safety analysis evaluation tool design to assess walking routes. 
+You will be provided with a detail list of GPS steps with polylines. 
+Your task is to perform a safety analysis on said paths, providing three outputs: safety evaluation, accessibility evaluation, comfort evaluation. 
+Do not provide justification for the intermediate steps, or any text other than the final outputs. 
+You will provide the final output in JSON format with four variables: safety rating (integer 0-100), accessibility rating (integer 0-100), comfort rating (integer 0-100) and justification (strings, maximum of 10 words).
+
+Route details:
+Distance: ${routeResult.distanceMeters} meters
+Duration: ${routeResult.duration}
+Steps:
+${routeResult.steps.map((s, i) => `${i+1}. ${s.instruction}`).join("\n")}
+`;
+
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error(`AI API Error: ${resp.status} ${await resp.text()}`);
+  }
+
+  const data = await resp.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "No analysis returned.";
+}
