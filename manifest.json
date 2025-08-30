@@ -3,6 +3,11 @@
   "name": "WalkMate",
   "version": "0.1.0",
   "description": "Analyzes walking route safety on Google Maps",
+  "icons": {
+    "16": "logo1.png",
+    "48": "logo1.png",
+    "128": "logo1.png"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.google.com/maps/*"],
