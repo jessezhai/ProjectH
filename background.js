@@ -1,6 +1,7 @@
 const GOOGLE_MAPS_API_KEY = "AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM";
 const GEMINI_API_KEY = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ";
 
+
 // Listen for messages from content.js
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
   if (req.type === "computeRoute") {
@@ -26,7 +27,7 @@ async function computeWalkingRoute(origin, destination) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
-      "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction"
+      "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.legs.steps.navigationInstruction"
     },
     body: JSON.stringify(body),
   });
@@ -47,7 +48,7 @@ async function computeWalkingRoute(origin, destination) {
 async function analyzeRouteWithAI(routeResult) {
   const prompt = `
 Assess this walking route for safety, accessibility, and comfort.
-Return JSON with: safety_rating, accessibility_rating, comfort_rating, justification (≤10 words).
+Return JSON with: safety_rating (0–100), accessibility_rating (0–100), comfort_rating (0–100), justification (≤10 words).
 
 Distance: ${routeResult.distanceMeters}
 Duration: ${routeResult.duration}
@@ -65,18 +66,41 @@ ${routeResult.steps.map((s, i) => `${i + 1}. ${s.instruction}`).join("\n")}
       })
     }
   );
+
   if (!resp.ok) throw new Error(`AI API Error: ${resp.status} ${await resp.text()}`);
   const data = await resp.json();
 
   let txt = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
   txt = txt.replace(/^```(?:json)?|```$/g, "").trim();
-  let parsed = {};
-  try { parsed = JSON.parse(txt); } catch {}
 
-  const safety = Number(parsed.safety_rating) || 0;
-  const access = Number(parsed.accessibility_rating) || 0;
-  const comfort = Number(parsed.comfort_rating) || 0;
-  const score = Math.round((safety + access + comfort) / 3);
+  console.log("[Gemini RAW]", txt);
+
+  let parsed = {};
+  try { parsed = JSON.parse(txt); } catch (e) {
+    console.error("[Gemini Parse Error]", e.message);
+  }
+
+  const safety = Math.min(Math.max(Number(parsed.safety_rating) || 0, 0), 100);
+  const access = Math.min(Math.max(Number(parsed.accessibility_rating) || 0, 0), 100);
+  const comfort = Math.min(Math.max(Number(parsed.comfort_rating) || 0, 0), 100);
+
+  // Weighted score (safety highest) 
+  // 50% safety - crime rate, traffic risk, lighting at night
+  // 30% accessibility - step-free access, sidewalk and crosswalk
+  // 20% comfort - noise leve, shade.trees
+  const score = Math.round(
+    safety * 0.5 +
+    access * 0.3 +
+    comfort * 0.2
+  );
+
+  // ---- Full Debug Logging ----
+  console.log("[Gemini Parsed JSON]", parsed);
+  console.log("[Score Breakdown]");
+  console.log("  Safety (50% weight):", safety);
+  console.log("  Accessibility (30% weight):", access);
+  console.log("  Comfort (20% weight):", comfort);
+  console.log("  → Final Weighted Score:", score);
 
   return {
     score,
