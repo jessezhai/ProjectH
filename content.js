@@ -278,7 +278,7 @@ if (currentRouteSignature && currentRouteSignature !== '') {
     
     computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
       .then(async (result) => {
-        console.log('Route computed:', result);
+        showLoading();
         const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ"
         const { score, justification } = await analyzeRouteWithAI(result, userApiKey);
         routeSafetyScore = score;
@@ -287,10 +287,16 @@ if (currentRouteSignature && currentRouteSignature !== '') {
         } else {
           updateMascot(score);
         }
-        const mascotImg = document.getElementById("mascot-img");
+        let mascotImg = document.getElementById("mascot-img");
         if (mascotImg) {
-          mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification}</p>`);
+          let existingJust = mascotImg.nextElementSibling;
+          if (existingJust && existingJust.classList.contains("justification")) {
+            existingJust.textContent = justification.replace(/"/g, "");
+          } else {
+            mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification.replace(/"/g, "")}</p>`);
+          }
         }
+        hideLoading();
       })
       .catch(error => console.error('Error computing route:', error));
   }
@@ -320,6 +326,45 @@ function getRouteSignature(url) {
   }
   
   return 'walking-route'; // Generic walking route signature
+}
+
+function showLoading() {
+  let mascotImg = document.getElementById("mascot-img");
+  if (!mascotImg) return;
+
+  // Check if spinner already exists
+  let existingSpinner = document.getElementById("loading-spinner");
+  if (!existingSpinner) {
+    const spinner = document.createElement("div");
+    spinner.id = "loading-spinner";
+    spinner.style.width = "40px";
+    spinner.style.height = "40px";
+    spinner.style.border = "4px solid #f3f3f3";
+    spinner.style.borderTop = "4px solid #555";
+    spinner.style.borderRadius = "50%";
+    spinner.style.animation = "spin 1s linear infinite";
+    spinner.style.margin = "10px auto";
+
+    mascotImg.insertAdjacentElement("afterend", spinner);
+  }
+
+  // Add keyframes if not already added
+  if (!document.getElementById("spinner-style")) {
+    const style = document.createElement("style");
+    style.id = "spinner-style";
+    style.innerHTML = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+function hideLoading() {
+  const spinner = document.getElementById("loading-spinner");
+  if (spinner) spinner.remove();
 }
 
 function checkForMeaningfulRouteChanges() {
@@ -352,7 +397,7 @@ function checkForMeaningfulRouteChanges() {
           if (routeData.origin && routeData.destination) {
             computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
               .then(async (result) => {
-                console.log('Route computed:', result);
+                showLoading();
                 const userApiKey = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ";
                 const { score, justification } = await analyzeRouteWithAI(result, userApiKey);
                 routeSafetyScore = score;
@@ -361,14 +406,20 @@ function checkForMeaningfulRouteChanges() {
                 } else {
                   updateMascot(score);
                 }
-                const mascotImg = document.getElementById("mascot-img");
+                let mascotImg = document.getElementById("mascot-img");
                 if (mascotImg) {
-                  mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification}</p>`);
+                  let existingJust = mascotImg.nextElementSibling;
+                  if (existingJust && existingJust.classList.contains("justification")) {
+                    existingJust.textContent = justification.replace(/"/g, "");
+                  } else {
+                    mascotImg.insertAdjacentHTML("afterend", `<p class="justification">${justification.replace(/"/g, "")}</p>`);
+                  }
                 }
               })
               .catch(error => console.error('Error computing route:', error))
               .finally(() => {
                 isProcessingUrlChange = false;
+                hideLoading();
               });
           } else {
             isProcessingUrlChange = false;
@@ -425,11 +476,7 @@ async function getWalkingRoute(originLat, originLng, destinationAddress) {
 
 async function analyzeRouteWithAI(routeResult, userApiKey) {
   const prompt = `
-You are a safety analysis evaluation tool design to assess walking routes. 
-You will be provided with a detail list of GPS steps with polylines. 
-Your task is to perform a safety analysis on said paths, providing three outputs: safety evaluation, accessibility evaluation, comfort evaluation. 
-Do not provide justification for the intermediate steps, or any text other than the final outputs. 
-You will provide the final output in JSON format with four variables: safety rating (integer 0-100), accessibility rating (integer 0-100), comfort rating (integer 0-100) and justification (strings, maximum of 10 words).
+Assess this walking route for safety, accessibility, and comfort. Provide a JSON with four variables: safetyRating (0-100), accessibilityRating (0-100), comfortRating (0-100), justification (≤10 words).
 
 Route details:
 Distance: ${routeResult.distanceMeters} meters
@@ -437,9 +484,8 @@ Duration: ${routeResult.duration}
 Steps:
 ${routeResult.steps.map((s, i) => `${i+1}. ${s.instruction}`).join("\n")}
 `;
-
   const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userApiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -455,7 +501,6 @@ ${routeResult.steps.map((s, i) => `${i+1}. ${s.instruction}`).join("\n")}
 
   const data = await resp.json();
   let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-  console.log(textResponse);
   if (textResponse.startsWith('"') && textResponse.endsWith('"')) {
     textResponse = textResponse.slice(1, -1).replace(/\\"/g, '"');
   }
