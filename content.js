@@ -1,7 +1,7 @@
 let routeSafetyScore = 100;
 const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif', 'happy4.gif', 'happy5.gif'];
 const neutralImages = ['neutral.png']
-const sadImages   = ['sad1.gif', 'sad2.gif'];
+const sadImages   = ['sad1.gif', 'sad2.gif', 'sad3.gif'];
 
 let currentRouteSignature = '';
 let isProcessingUrlChange = false;
