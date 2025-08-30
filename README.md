@@ -1,5 +1,10 @@
 # WalkMate
-SYNCS 2025 Hackathon
+Credits:
+Jesse Zhai
+Brian Zhang
+Oliver Zhang
+Shunn
+Xinbei Yan
 
 # Installation
 ## Program Setup
