@@ -428,4 +428,113 @@ if (currentRouteSignature && currentRouteSignature !== '') {
     computeWalkingRouteFromUrlObj(routeData, GOOGLE_MAPS_API_KEY)
       .then(result => console.log('Route computed:', result))
       //CALL FUNCTION, USE RESULTS TO GENERATE PROMPT FOR AI ANALYSIS
-      .catch(error => console.error('Error computing route:', e
+      .catch(error => console.error('Error computing route:', error));
+  }
+
+
+}
+
+// Function to extract meaningful route signature from URL
+function getRouteSignature(url) {
+  if (!url.includes('!3e2')) {
+    return ''; // Not a walking route
+  }
+  
+  // Extract the core route information, ignoring view parameters
+  const match = url.match(/\/dir\/([^\/]+)\/([^\/\?]+)/);
+  if (match) {
+    return `${match[1]}-${match[2]}-walking`;
+  }
+  
+  // Alternative pattern - look for data parameter with route coordinates
+  const urlParams = new URLSearchParams(url.split('?')[1] || '');
+  const dataParam = urlParams.get('data');
+  if (dataParam) {
+    // Extract just the route endpoints from the data parameter
+    const coords = dataParam.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/g);
+    if (coords && coords.length >= 2) {
+      return `${coords[0]}-${coords[1]}-walking`;
+    }
+  }
+  
+  return 'walking-route'; // Generic walking route signature
+}
+
+// Debounced function to check for meaningful route changes
+function checkForMeaningfulRouteChanges() {
+  // Clear existing debounce timer
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+  
+  // Debounce the check to avoid rapid fire updates
+  debounceTimer = setTimeout(() => {
+    const newUrl = window.location.href;
+    const newRouteSignature = getRouteSignature(newUrl);
+    
+    // Only process if the route signature actually changed
+    if (newRouteSignature !== currentRouteSignature && !isProcessingUrlChange) {
+      console.log('Route signature changed:', currentRouteSignature, '->', newRouteSignature);
+      isProcessingUrlChange = true;
+      currentRouteSignature = newRouteSignature;
+      
+      // Remove existing popup only if switching between different route types
+      const existingPopup = document.getElementById('mapify-popup');
+      if (existingPopup && (currentRouteSignature === '' || newRouteSignature === '')) {
+        existingPopup.remove();
+      }
+      
+      // Analyze route if URL contains !3e2 (walking mode)
+      if (newRouteSignature && newRouteSignature !== '') {
+        // setTimeout(() => {
+        //   analyzeCurrentRoute().finally(() => {
+        //     isProcessingUrlChange = false;
+        //   });
+        // }, 1500); // Increased delay to ensure page is fully loaded
+      } else {
+        // Remove popup if no longer in walking mode
+        if (existingPopup) {
+          existingPopup.remove();
+        }
+        isProcessingUrlChange = false;
+      }
+    }
+  }, 500); // 500ms debounce delay
+}
+
+// Use multiple methods to detect URL changes, but with debouncing
+setInterval(checkForMeaningfulRouteChanges, 2000); // Poll every 2 seconds (less frequent)
+
+// Also listen for popstate events (back/forward navigation)
+window.addEventListener('popstate', checkForMeaningfulRouteChanges);
+
+// Listen for pushstate/replacestate (programmatic navigation) with debouncing
+const originalPushState = history.pushState;
+const originalReplaceState = history.replaceState;
+
+history.pushState = function() {
+  originalPushState.apply(history, arguments);
+  checkForMeaningfulRouteChanges();
+};
+
+history.replaceState = function() {
+  originalReplaceState.apply(history, arguments);
+  checkForMeaningfulRouteChanges();
+};
+
+
+// Call this from your UI when you’re ready to fetch the route
+async function getWalkingRoute(originLat, originLng, destinationAddress) {
+  const msg = {
+    type: "computeRoute",
+    payload: {
+      origin: { lat: originLat, lng: originLng },
+      destination: destinationAddress
+    }
+  };
+
+  const res = await chrome.runtime.sendMessage(msg);
+  if (!res?.ok) throw new Error(res?.error || "Unknown error");
+  return res.data; // { distanceMeters, duration, routePolyline, steps[] }
+}
+
