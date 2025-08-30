@@ -1,5 +1,6 @@
 let routeSafetyScore = 100;
-const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif', 'happy4.gif'];
+const happyImages = ['happy1.gif', 'happy2.gif', 'happy3.gif', 'happy4.gif', 'happy5.gif'];
+const neutralImages = ['neutral.png']
 const sadImages   = ['sad1.gif', 'sad2.gif'];
 
 let currentRouteSignature = '';
@@ -63,9 +64,15 @@ function updateMascot(value) {
   const mascot = document.getElementById("mascot-img");
   if (!mascot) return;
 
-  const newGif = value > 50
-    ? chrome.runtime.getURL(getRandomImage(happyImages))
-    : chrome.runtime.getURL(getRandomImage(sadImages));
+  let newGif;
+
+  if (value > 60) {
+    newGif = chrome.runtime.getURL(getRandomImage(happyImages));
+  } else if (value >= 40 && value <= 60) {
+    newGif = chrome.runtime.getURL(getRandomImage(neutralImages));
+  } else {
+    newGif = chrome.runtime.getURL(getRandomImage(sadImages));
+  }
 
   mascot.src = newGif;
 

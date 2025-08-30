@@ -27,9 +27,11 @@
       "happy2.gif",
       "happy3.gif",
       "happy4.gif",
-      "neutral1.gif",
+      "happy5.gif",
+      "neutral.png",
       "sad1.gif",
-      "sad2.gif"],
+      "sad2.gif",
+      "sad3.gif"],
       "matches": ["https://www.google.com/*","https://maps.googleapis.com/*","https://routes.googleapis.com/*"]
     }
   ]

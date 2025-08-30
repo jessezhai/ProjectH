@@ -13,11 +13,18 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
   }
 });
 
-// ---- Google Maps Routes API ----
+function makeWaypoint(input) {
+  if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(input)) {
+    const [lat, lng] = input.split(",").map(Number);
+    return { location: { latLng: { latitude: lat, longitude: lng } } };
+  }
+  return { address: input };
+}
+
 async function computeWalkingRoute(origin, destination) {
   const body = {
-    origin: { address: origin },
-    destination: { address: destination },
+    origin: makeWaypoint(origin),
+    destination: makeWaypoint(destination),
     travelMode: "WALK",
     units: "METRIC",
   };
