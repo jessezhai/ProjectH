@@ -9,5 +9,11 @@
       "css": ["bootstrap-5.3.8-dist/css/bootstrap.min.css", "content.css"]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["mascot.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "permissions": ["activeTab"]
 }
