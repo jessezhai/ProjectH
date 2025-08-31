@@ -1,5 +1,5 @@
-const GOOGLE_MAPS_API_KEY = "AIzaSyC4MUFr92FUZTWT0fWQ_ZOi4Ts_bUqxDVM";
-const GEMINI_API_KEY = "AIzaSyArMF10ij-KJ_WM14rl9zdQicNDZVKXzOQ";
+const GOOGLE_MAPS_API_KEY = "GOOGLE_MAPS_API_KEY_HERE";
+const GEMINI_API_KEY = "GEMINI_API";
 
 
 // Listen for messages from content.js

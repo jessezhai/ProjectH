@@ -6,7 +6,7 @@
 * Download main branch
 * Import folder to Chrome extensions
   * Located at chrome://extensions (enable developer mode -> load unpacked -> locate WalkMate folder)
-
+* Put your GOOGLE_MAPS_API_KEY_HERE and GEMINI_API in background.js 
 
 
 ## Inspiration

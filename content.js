@@ -75,20 +75,12 @@ function updateMascot(value) {
 
   mascot.src = newGif;
 
-  loopMascotGif(mascot, 1000);
 }
 
 function getRandomImage(images) {
   return images[Math.floor(Math.random() * images.length)];
 }
 
-function loopMascotGif(imgElement, delay = 500) {
-  const src = imgElement.src;
-  setTimeout(() => {
-    imgElement.src = '';
-    setTimeout(() => { imgElement.src = src; }, 50);
-  }, delay);
-}
 
 function extractRouteFromURL(url) {
   const urlParams = new URLSearchParams(url.split('?')[1] || '');
