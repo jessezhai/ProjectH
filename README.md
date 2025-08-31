@@ -1,16 +1,11 @@
 ![Logo](logo1.png)
 # WalkMate
-Credits:
-Jesse Zhai
-Brian Zhang
-Oliver Zhang
-Shunn
-Xinbei Yan
 
-# Installation
-## Program Setup
-### Introduction
 
+# Getting Started
+* Download main branch
+* Import folder to Chrome extensions
+  * Located at chrome://extensions (enable developer mode -> load unpacked -> locate WalkMate folder)
 
 
 
@@ -34,3 +29,11 @@ A lot of unexpected challenges were met when creating this tool. For starters, n
 
 ## What's next for WalkMate
 We're not sure how we envision the future of this tool - all we know is that we're keen to give commuters of all kinds the right support they deserve to empower their transport needs. We're happy to leave our impact in this landscape by giving to the communities this interesting and prospective idea to explore.
+
+
+## Credits:
+Jesse Zhai  
+Brian Zhang  
+Oliver Zhang  
+Shunn Yee  
+Xinbei Yan  
