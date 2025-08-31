@@ -54,7 +54,8 @@ async function computeWalkingRoute(origin, destination) {
 // ---- Gemini AI ----
 async function analyzeRouteWithAI(routeResult) {
   const prompt = `
-Assess this walking route for safety, accessibility, and comfort.
+Assess this walking route for safety, accessibility, and comfort. Use factors such as roads and landmarks to significantly influence the outcome,
+so that various different routes from the same place to the same location may return a different result.
 Return JSON with: safety_rating (0–100), accessibility_rating (0–100), comfort_rating (0–100), justification (≤10 words).
 
 Distance: ${routeResult.distanceMeters}
