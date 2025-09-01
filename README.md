@@ -1,6 +1,7 @@
+
 ![Logo](logo1.png)
 # WalkMate
-
+[WalkMate – your friendly travel mascot](https://youtu.be/4l2AvbjOIXM)
 
 # Getting Started
 * Download main branch
