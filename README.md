@@ -1,8 +1,6 @@
 
-![Logo](logo1.png)
 # WalkMate
-[WalkMate – your friendly travel mascot](https://youtu.be/4l2AvbjOIXM)
-
+[![Watch the video](https://img.youtube.com/vi/4l2AvbjOIXM/0.jpg)](https://youtu.be/4l2AvbjOIXM)
 # Getting Started
 * Download main branch
 * Import folder to Chrome extensions
